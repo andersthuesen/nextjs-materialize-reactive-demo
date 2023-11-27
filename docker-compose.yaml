@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  materialize:
+    image: materialize/materialized
+    ports:
+      - 6875:6875
+      - 6876:6876
+    volumes:
+      - ./data/materialize/mzdata:/mzdata
+
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+
+  # Add your services here

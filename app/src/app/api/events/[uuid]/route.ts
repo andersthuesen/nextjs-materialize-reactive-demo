@@ -15,8 +15,6 @@ export async function GET(
   req: NextRequest,
   { params: { uuid } }: { params: { uuid: string } }
 ) {
-  console.log("Test");
-
   // Get SQL query
   const serializedQueryData = await redis.get(`query:${uuid}`);
 

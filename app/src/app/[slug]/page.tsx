@@ -1,4 +1,4 @@
-import { Subscribe } from "@/components/subscribe";
+import { LiveCounter } from "@/components/live-counter";
 import { sql } from "@/services/db";
 import { redis } from "@/services/redis";
 import { MaybeRow, PendingQuery, RowList } from "postgres";
@@ -7,10 +7,7 @@ async function subscribe<T extends MaybeRow[]>(
   query: PendingQuery<T>
 ): Promise<[RowList<T>, string]> {
   // Create UUID
-
   const uuid = Math.random().toString(36).slice(7);
-
-  const test = await sql`${query}`.describe();
   const serializedQuery = JSON.stringify(query);
 
   await redis.set(`query:${uuid}`, serializedQuery, "EX", 60);
@@ -25,16 +22,17 @@ export default async function Home({
 }: {
   params: { slug: string };
 }) {
-  const [currentCount, uuid] = await subscribe(sql`
+  const [currentCountData, uuid] = await subscribe(sql<{ count: number }[]>`
     SELECT count(*) AS count FROM counts
     WHERE slug = ${slug}
   `);
 
+  const currentCount = currentCountData[0];
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <h1>{slug}</h1>
-      <h2>Current count: {currentCount.at(0)?.count}</h2>
-      <h2>UUID: {uuid}</h2>
+      <LiveCounter initialCount={currentCount!} uuid={uuid} />
       <form>
         <button
           formAction={async () => {
@@ -47,7 +45,6 @@ export default async function Home({
           Add count
         </button>
       </form>
-      <Subscribe uuid={uuid} />
     </main>
   );
 }
